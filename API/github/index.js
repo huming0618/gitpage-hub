@@ -4,6 +4,7 @@ const router = require('koa-router')(prefix);
 const url = require('url');
 const querystring  = require("querystring");
 const axios = require('axios');
+const github = require('../../github');
 
 const API_CLIENTID = '7bac713cd8c6857a392d';
 const API_SECRET = 'b4207660fd700caef43412018c6588809df13beb';
@@ -39,34 +40,14 @@ router.get('/get/ref', async (ctx)=>{
 });
 
 router.get('/auth/success', async (ctx)=>{
-    //http://localhost:9000/github/auth/success?code=4616993562b734f0f12c
-    
+    //http://localhost:9003/github/auth/success?code=9a5d4d559903badff7bb
     
     const authCode = querystring.parse(ctx.querystring)['code'];
+    console.log('authCode', authCode);
 
     if (authCode){
-        console.log('authCode', authCode);
-        const payload = {
-            client_id: API_CLIENTID,
-            client_secret: API_SECRET,
-            code: authCode
-        }
-
-        await axios
-                .post('https://github.com/login/oauth/access_token', payload)
-                .then((resp)=>{
-                    if (resp.status === 200){
-                        
-                        const accessToken = querystring.parse(resp.data)['access_token'];
-                        console.log('accessToken', accessToken);
-                        ctx.body = 'auth OK ! ' + accessToken;
-                    }
-                    else {
-                        ctx.body = 'auth Error!';
-                    }
-                })
-        // "https://github.com/login/oauth/access_token"
-        // console.log(ctx.res);
+        const result = await github.doAuth(authCode);
+        ctx.body = 'auth OK!';
     }
 });
 
@@ -74,24 +55,14 @@ router.get('/auth/success', async (ctx)=>{
 router.get('/auth/:host', async (ctx) => {
     const host = ctx.params.host;
     const res = ctx.res;
+
+    github.init(host);
+
     //ctx.body = {'host': host };
-    if (host === 'github.com'){
-        
-        //http://localhost:9000/github/auth/success?host=github.com
-        const oauthConfig = {
-            client_id: API_CLIENTID,
-            //redirect_uri: 'http://localhost:9000/github/auth/success',
-            scope: 'repo, user'
-        }
-
-
-        const authURL = `https://github.com/login/oauth/authorize?${querystring.stringify(oauthConfig)}`;
-        console.log(authURL);
-
-        //res.statusCode = 302;
-        ctx.redirect(authURL);
-       
-    }
+    const authURL = github.getOAuthURL();
+    console.log(authURL);
+    //res.statusCode = 302;
+    ctx.redirect(authURL);
 });
 
 module.exports = router;

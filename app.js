@@ -2,6 +2,7 @@
 //      presets: ['es2015-node5', 'stage-3']
 // });
 
+const github = require('./github');
 const koa = require('koa');
 const convert = require('koa-convert');
 const cors = require('koa-cors');
@@ -11,6 +12,8 @@ const fs = require('fs');
 const serve = require('koa-static-server');
 
 const addAPIRoutes = require('./API');
+
+
 
 const app = new koa();
 
@@ -36,7 +39,7 @@ app.use(convert(serve({"rootDir":"public", "index": "index.html"})));
     const sourcePath = path.join(__dirname, 'git-blog/public')
 
     const items = require('./scan-folder')(sourcePath);
-    
+
 
 }())
 
